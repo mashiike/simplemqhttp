@@ -1,0 +1,42 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - misspell
+    - gocyclo
+  settings:
+    misspell:
+      locale: US
+    errcheck:
+      exclude-functions:
+        - os.ReadFile
+        - io.Copy(*bytes.Buffer)
+        - io.Copy(os.Stdout)
+        - (io.Reader).Read
+        - (io.ReadCloser).Close
+        - (io.ReadCloser).Read
+        - (io.Writer).Write
+        - (io.Writer).WriteString
+        - (io.Writer).WriteTo
+        - (*encoding/json.Encoder).Encode
+        - (net/http.Header).Write
+  exclusions:
+    generated: strict
+    warn-unused: true
+    rules:
+      # Exclude some linters from running on tests files.
+      - path: _test\.go
+        linters:
+          - gocyclo
+          - errcheck
+          - gosec
+      - path: \.gen\.go
+        linters:
+          - gocyclo
+          - errcheck
+          - gosec
+run:
+  timeout: 15m
+  tests: true
+  concurrency: 4
