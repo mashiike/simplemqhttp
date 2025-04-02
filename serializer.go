@@ -51,10 +51,9 @@ func (s *BodyOnlySerializer) Serialize(req *http.Request) (string, error) {
 func (s *BodyOnlySerializer) Deserialize(content string) (*http.Request, error) {
 	if !s.NoBase64 {
 		decoded, err := base64.StdEncoding.DecodeString(content)
-		if err != nil {
-			return nil, err
+		if err == nil {
+			content = string(decoded)
 		}
-		content = string(decoded)
 	}
 	req, err := http.NewRequest(http.MethodPost, "/", strings.NewReader(content))
 	if err != nil {

@@ -2,11 +2,15 @@ package simplemqhttp
 
 import (
 	"context"
+	"encoding/base64"
+	"errors"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/mashiike/simplemqhttp/simplemq"
@@ -94,7 +98,7 @@ func TestTransport(t *testing.T) {
 
 			// リクエストボディがメッセージに正しく保存されていることを確認
 			if tc.body != "" {
-				assert.Equal(t, tc.body, msg.Content)
+				assert.Equal(t, base64.StdEncoding.EncodeToString([]byte(tc.body)), msg.Content)
 			}
 
 			logger.Debug("Test completed", "message_id", msgID, "queue", queueName)
@@ -160,6 +164,35 @@ func TestTransportWithContext(t *testing.T) {
 	assert.Contains(t, err.Error(), "context canceled")
 }
 
+type CustomSerializer struct {
+	mu      sync.Mutex
+	storoed []*http.Request
+}
+
+func (s *CustomSerializer) Serialize(req *http.Request) (string, error) {
+	if req == nil {
+		return "", errors.New("request is nil")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	indexNumber := len(s.storoed)
+	s.storoed = append(s.storoed, req.Clone(context.Background()))
+	return strconv.Itoa(indexNumber), nil
+}
+
+func (s *CustomSerializer) Deserialize(content string) (*http.Request, error) {
+	if content == "" {
+		return nil, errors.New("content is empty")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	indexNumber, err := strconv.Atoi(content)
+	if err != nil || indexNumber < 0 || indexNumber >= len(s.storoed) {
+		return nil, errors.New("invalid index number")
+	}
+	return s.storoed[indexNumber].Clone(context.Background()), nil
+}
+
 func TestTransportCustomSerializer(t *testing.T) {
 	// stubサーバーの作成
 	apiKey := "test-api-key"
@@ -172,7 +205,7 @@ func TestTransportCustomSerializer(t *testing.T) {
 
 	// カスタムシリアライザを持つTransportの作成
 	transport := NewTransportWithClient(client)
-	transport.Serializer = &BodyOnlySerializer{}
+	transport.Serializer = &CustomSerializer{}
 
 	// リクエストの作成
 	req, err := http.NewRequest("POST", "/custom", strings.NewReader(`{"custom":"serializer"}`))
@@ -193,7 +226,7 @@ func TestTransportCustomSerializer(t *testing.T) {
 	// メッセージの内容を確認
 	msg := stubServer.GetMessage("test-queue", msgID)
 	assert.NotNil(t, msg)
-	assert.Equal(t, `{"custom":"serializer"}`, msg.Content)
+	assert.Equal(t, `0`, msg.Content)
 }
 
 func TestTransportHTTPClient(t *testing.T) {

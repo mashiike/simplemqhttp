@@ -1,6 +1,7 @@
 package simplemqhttp
 
 import (
+	"encoding/base64"
 	"io"
 	"net/http"
 	"strings"
@@ -33,7 +34,7 @@ func TestBodyOnlySerializer(t *testing.T) {
 
 		serialized, err := serializer.Serialize(req)
 		require.NoError(t, err)
-		assert.Equal(t, `{"data":"value"}`, serialized)
+		assert.Equal(t, base64.StdEncoding.EncodeToString([]byte(`{"data":"value"}`)), serialized)
 	})
 
 	t.Run("Serialize empty request body", func(t *testing.T) {

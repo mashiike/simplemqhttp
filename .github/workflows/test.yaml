@@ -22,4 +22,4 @@ jobs:
 
       - name: Build & Test
         run: |
-          go test -race ./...
+          go test -race ./... -timeout 300s
