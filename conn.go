@@ -214,7 +214,9 @@ func (c *Conn) SetDeadline(t time.Time) error {
 	currentTimeout := c.msg.VisibilityTimeoutTime()
 
 	// 目標のタイムアウト時刻に達するまで延長を繰り返す
-	for currentTimeout.Before(t) {
+	maxAttempts := 10
+	sleepDuration := 200 * time.Millisecond
+	for attempts := 0; currentTimeout.Before(t) && attempts < maxAttempts; attempts++ {
 		extendedMsg, err := c.client.ExtendVisibilityTimeout(context.Background(), c.msg.ID)
 		if err != nil {
 			return fmt.Errorf("failed to extend visibility timeout to deadline: %w", err)
