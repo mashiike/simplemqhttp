@@ -32,7 +32,7 @@ func TestListener(t *testing.T) {
 		client: client,
 		Logger: logger,
 	}
-	handledReqesutCh := make(chan []byte, 1)
+	handledRequestCh := make(chan []byte, 1)
 	// HTTPサーバーのセットアップ
 	server := &http.Server{
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +42,7 @@ func TestListener(t *testing.T) {
 				return
 			}
 			r.Body.Close()
-			handledReqesutCh <- bs
+			handledRequestCh <- bs
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{"status":"success"}`))
@@ -80,7 +80,7 @@ func TestListener(t *testing.T) {
 			msg := stubServer.AddMessage("test-queue", tc.requestContent)
 			require.NotNil(t, msg)
 
-			bs := <-handledReqesutCh
+			bs := <-handledRequestCh
 			require.Equal(t, tc.requestContent, string(bs))
 		})
 	}
