@@ -232,7 +232,7 @@ func (c *Conn) SetDeadline(t time.Time) error {
 			"target_deadline", t.Format(time.RFC3339))
 
 		// 少し待機して、APIの呼び出し頻度を制限
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(sleepDuration)
 	}
 
 	c.logger.Debug("successfully extended visibility timeout to reach deadline",
