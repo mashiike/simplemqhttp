@@ -12,10 +12,12 @@ import (
 	"github.com/mashiike/simplemqhttp/simplemq"
 )
 
+// ResponseHandler は、HTTP レスポンスを処理するためのインターフェースです。
 type ResponseHandler interface {
 	HandleResponse(resp *http.Response, req *http.Request) error
 }
 
+// Listener は、SimpleMQ からメッセージを受信して HTTP リクエストに変換するための net.Listener 実装です。
 type Listener struct {
 	client           *simplemq.Client
 	mu               sync.Mutex
@@ -28,11 +30,13 @@ type Listener struct {
 	baseCancel       context.CancelFunc
 }
 
+// NewListener は、新しい Listener を作成します。
 func NewListener(apikey string, queue string) *Listener {
 	client := simplemq.NewClient(apikey, queue)
 	return NewListenerWithClient(client)
 }
 
+// NewListenerWithClient は、既存の SimpleMQ クライアントを使用して新しい Listener を作成します。
 func NewListenerWithClient(client *simplemq.Client) *Listener {
 	return &Listener{
 		client: client,
@@ -86,7 +90,7 @@ func (l *Listener) logger() *slog.Logger {
 	return slog.Default()
 }
 
-// Accept waits for and returns the next connection to the listener.
+// Accept は、次の接続を待機して返します。
 func (l *Listener) Accept() (net.Conn, error) {
 	ctx := l.baseContext()
 	for {
@@ -111,8 +115,8 @@ func (l *Listener) Accept() (net.Conn, error) {
 	}
 }
 
-// Close closes the listener.
-// Any blocked Accept operations will be unblocked and return errors.
+// Close はリスナーを閉じます。
+// ブロックされた Accept 操作はすべてブロック解除され、エラーを返します。
 func (l *Listener) Close() error {
 	if l.baseCancel != nil {
 		l.baseCancel()
@@ -121,7 +125,7 @@ func (l *Listener) Close() error {
 	return nil
 }
 
-// Addr returns the listener's network address.
+// Addr はリスナーのネットワークアドレスを返します。
 func (l *Listener) Addr() net.Addr {
 	return Addr(l.client.Queue)
 }

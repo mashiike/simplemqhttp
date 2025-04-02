@@ -12,6 +12,7 @@ import (
 	"github.com/mashiike/simplemqhttp/simplemq"
 )
 
+// Transport は、HTTP リクエストを SimpleMQ メッセージとして送信するための http.RoundTripper 実装です。
 type Transport struct {
 	client *simplemq.Client
 	// Serializer は、リクエストをシリアライズするためのインターフェースです。
@@ -19,11 +20,13 @@ type Transport struct {
 	Serializer Serializer
 }
 
+// NewTransport は、新しい Transport を作成します。
 func NewTransport(apikey string, queue string) *Transport {
 	client := simplemq.NewClient(apikey, queue)
 	return NewTransportWithClient(client)
 }
 
+// NewTransportWithClient は、既存の SimpleMQ クライアントを使用して新しい Transport を作成します。
 func NewTransportWithClient(client *simplemq.Client) *Transport {
 	return &Transport{
 		client: client,
@@ -39,6 +42,7 @@ func (t *Transport) serializer() Serializer {
 	return &BodyOnlySerializer{}
 }
 
+// RoundTrip は HTTP リクエストを SimpleMQ メッセージとして送信し、その結果を HTTP レスポンスとして返します。
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	serializer := t.serializer()
 	content, err := serializer.Serialize(req)

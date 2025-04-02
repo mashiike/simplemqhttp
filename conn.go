@@ -16,6 +16,7 @@ import (
 	"github.com/mashiike/simplemqhttp/simplemq"
 )
 
+// Conn は、SimpleMQ から受信したメッセージを HTTP リクエストに変換するための net.Conn 実装です。
 type Conn struct {
 	addr         net.Addr
 	msg          simplemq.Message

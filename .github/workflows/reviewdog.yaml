@@ -1,0 +1,33 @@
+name: reviewdog
+on: [pull_request]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  golangci-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@f9bba13753278f6a73b27a56a3ffb1bfda90ed71 # v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          level: warning
+          golangci_lint_flags: "--config=.golangci.yaml"
+          filter_mode: diff_context
+          reporter: github-pr-review
+          fail_level: error
+
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: reviewdog/action-actionlint@a5524e1c19e62881d79c1f1b9b6f09f16356e281 # v1
+        with:
+          reporter: github-pr-review
+          filter_mode: diff_context
+          fail_level: error
+
