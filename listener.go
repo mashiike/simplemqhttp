@@ -71,6 +71,7 @@ func (l *Listener) accept(ctx context.Context) (*simplemq.Message, error) {
 	defer l.mu.Unlock()
 
 	for len(l.acceptedMessages) == 0 {
+		time.Sleep(200 * time.Millisecond)
 		msg, err := l.client.ReceiveMessages(ctx)
 		if err != nil {
 			return nil, err
